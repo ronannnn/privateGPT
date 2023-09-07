@@ -113,6 +113,7 @@ def load_documents(source_dir: str, ignored_files=None) -> List[Document]:
         results = []
         with tqdm(total=len(filtered_files), desc='Loading new documents', ncols=80) as pbar:
             for i, docs in enumerate(pool.imap_unordered(load_single_document, filtered_files)):
+                print("ingest", filtered_files[i])
                 results.extend(docs)
                 pbar.update()
 

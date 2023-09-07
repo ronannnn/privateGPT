@@ -11,6 +11,6 @@ if PERSIST_DIRECTORY is None:
 
 # Define the Chroma settings
 CHROMA_SETTINGS = Settings(
-        persist_directory=PERSIST_DIRECTORY,
-        anonymized_telemetry=False
+    persist_directory=PERSIST_DIRECTORY,
+    anonymized_telemetry=False
 )

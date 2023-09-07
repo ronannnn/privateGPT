@@ -9,6 +9,7 @@ import chromadb
 import os
 import argparse
 import time
+from constants import CHROMA_SETTINGS
 
 if not load_dotenv():
     print("Could not load .env file or it is empty. Please check if it exists and is readable.")
@@ -20,16 +21,15 @@ persist_directory = os.environ.get('PERSIST_DIRECTORY')
 model_type = os.environ.get('MODEL_TYPE')
 model_path = os.environ.get('MODEL_PATH')
 model_n_ctx = os.environ.get('MODEL_N_CTX')
-model_n_batch = int(os.environ.get('MODEL_N_BATCH',8))
-target_source_chunks = int(os.environ.get('TARGET_SOURCE_CHUNKS',4))
+model_n_batch = int(os.environ.get('MODEL_N_BATCH', 8))
+target_source_chunks = int(os.environ.get('TARGET_SOURCE_CHUNKS', 4))
 
-from constants import CHROMA_SETTINGS
 
 def main():
     # Parse the command line arguments
     args = parse_arguments()
     embeddings = HuggingFaceEmbeddings(model_name=embeddings_model_name)
-    chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
+    chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS, path=persist_directory)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS, client=chroma_client)
     retriever = db.as_retriever(search_kwargs={"k": target_source_chunks})
     # activate/deactivate the streaming StdOut callback for LLMs
@@ -44,7 +44,7 @@ def main():
             # raise exception if model_type is not supported
             raise Exception(f"Model type {model_type} is not supported. Please choose one of the following: LlamaCpp, GPT4All")
 
-    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents= not args.hide_source)
+    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=not args.hide_source)
     # Interactive questions and answers
     while True:
         query = input("\nEnter a query: ")
@@ -69,6 +69,7 @@ def main():
         for document in docs:
             print("\n> " + document.metadata["source"] + ":")
             print(document.page_content)
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='privateGPT: Ask questions to your documents without an internet connection, '

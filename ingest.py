@@ -32,7 +32,7 @@ if not load_dotenv():
 from constants import CHROMA_SETTINGS
 import chromadb
 
-# Load environment variables
+#  Load environment variables
 persist_directory = os.environ.get('PERSIST_DIRECTORY')
 source_directory = os.environ.get('SOURCE_DIRECTORY', 'source_documents')
 embeddings_model_name = os.environ.get('EMBEDDINGS_MODEL_NAME')
@@ -42,7 +42,7 @@ chunk_overlap = 50
 
 # Custom document loaders
 class MyElmLoader(UnstructuredEmailLoader):
-    """Wrapper to fallback to text/plain when default does not work"""
+    """Wrapper to fall back to text/plain when default does not work"""
 
     def load(self) -> List[Document]:
         """Wrapper adding fallback for elm without html"""
@@ -52,7 +52,7 @@ class MyElmLoader(UnstructuredEmailLoader):
             except ValueError as e:
                 if 'text/html content not found in email' in str(e):
                     # Try plain text
-                    self.unstructured_kwargs["content_source"]="text/plain"
+                    self.unstructured_kwargs["content_source"] = "text/plain"
                     doc = UnstructuredEmailLoader.load(self)
                 else:
                     raise
@@ -92,10 +92,13 @@ def load_single_document(file_path: str) -> List[Document]:
 
     raise ValueError(f"Unsupported file extension '{ext}'")
 
-def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Document]:
+
+def load_documents(source_dir: str, ignored_files=None) -> List[Document]:
     """
     Loads all documents from the source documents directory, ignoring specified files
     """
+    if ignored_files is None:
+        ignored_files = []
     all_files = []
     for ext in LOADER_MAPPING:
         all_files.extend(
@@ -115,10 +118,13 @@ def load_documents(source_dir: str, ignored_files: List[str] = []) -> List[Docum
 
     return results
 
-def process_documents(ignored_files: List[str] = []) -> List[Document]:
+
+def process_documents(ignored_files=None) -> List[Document]:
     """
     Load documents and split in chunks
     """
+    if ignored_files is None:
+        ignored_files = []
     print(f"Loading documents from {source_directory}")
     documents = load_documents(source_directory, ignored_files)
     if not documents:
@@ -130,6 +136,7 @@ def process_documents(ignored_files: List[str] = []) -> List[Document]:
     print(f"Split into {len(texts)} chunks of text (max. {chunk_size} tokens each)")
     return texts
 
+
 def does_vectorstore_exist(persist_directory: str, embeddings: HuggingFaceEmbeddings) -> bool:
     """
     Checks if vectorstore exists
@@ -139,11 +146,12 @@ def does_vectorstore_exist(persist_directory: str, embeddings: HuggingFaceEmbedd
         return False
     return True
 
+
 def main():
     # Create embeddings
     embeddings = HuggingFaceEmbeddings(model_name=embeddings_model_name)
     # Chroma client
-    chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
+    chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS, path=persist_directory)
 
     if does_vectorstore_exist(persist_directory, embeddings):
         # Update and store locally vectorstore
@@ -160,7 +168,6 @@ def main():
         print(f"Creating embeddings. May take some minutes...")
         db = Chroma.from_documents(texts, embeddings, persist_directory=persist_directory, client_settings=CHROMA_SETTINGS, client=chroma_client)
     db.persist()
-    db = None
 
     print(f"Ingestion complete! You can now run privateGPT.py to query your documents")
 
